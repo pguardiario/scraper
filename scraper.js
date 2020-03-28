@@ -8,7 +8,7 @@ const clean = (s) => s.trim().replace(/\s+/g, ' ')
 class List {
   constructor(css, $, node) {
     this.$ = $
-    this.elements = this.$(node || 'body').find(css).get().map(el => new Element(el, this.$))
+    this.elements = (node ? this.$(node).find(css) : this.$(css) ).get().map(el => new Element(el, this.$))
 
     this[Symbol.iterator] = () => {
       return {
@@ -46,7 +46,7 @@ class List {
           case !!match:
             return this.elements.map(el => el[match[1]])
           default:
-            throw new Error('unknown key: ' + key)
+            throw obj[key].bind(obj)
         }
       }
     })
@@ -93,22 +93,20 @@ class Page {
       this.search('a[href]').map(a => a.href = new URL(a.href, base).href)
     } catch(e) {
       // debugger
-
     }
 
+    this.title = this.at('title').text
   }
 
   search(css) {
-    return new List(css, this.$) // this.$(css).get().map(el => new Element(el, this.$))
+    return new List(css, this.$)
   }
 
   at(css) {
     return this.search(css)[0]
   }
 
-  title() {
-    return this.at('title').text
-  }
+
 }
 
 class Scraper {
@@ -154,9 +152,7 @@ module.exports = new Scraper()
 
 // ;(async() => {
 //   let s = new Scraper()
-//   let page = await s.get('https://www.amazon.com/')
-//   let as = page.search('a')
-//   as.length
+//   let page = await s.get('https://www.amazon.co.uk/LG-28TL510S-Smart-Ready-LED/dp/B07V1XCNVT/ref=sr_1_1?dchild=1&qid=1585364437&refinements=p_n_size_browse-bin%3A9591876031%7C9591877031%7C9591878031%2Cp_n_feature_two_browse-bin%3A2752523031&s=electronics&sr=1-1')
 
 //   debugger
 // })()
