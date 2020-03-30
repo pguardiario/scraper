@@ -135,8 +135,7 @@ class Scraper {
 
   async get(url) {
     let response = await fb.get(url)
-    if (response.headers['content-type'].match(/html/)) {
-      // return cheerio.load(response.data)
+    if (response.headers['content-type'] && response.headers['content-type'].match(/html/)) {
       return new Page('' + response.data, url)
     } else {
       return response.data
