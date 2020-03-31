@@ -133,8 +133,21 @@ class Scraper {
     return await csv().fromFile('path')
   }
 
-  async get(url) {
-    let response = await fb.get(url)
+  async get(url, options={}) {
+    let cached, response
+    if(options.cache){
+      if(cached = await options.cache.find({ _id: url })){
+        response = cached.response
+      }
+    }
+
+    if(!response){
+      response = await fb.get(url, options)
+      if(options.cache){
+        await options.cache.update(url, { response })
+      }
+    }
+
     if (response.headers['content-type'] && response.headers['content-type'].match(/html/)) {
       return new Page('' + response.data, url)
     } else {
