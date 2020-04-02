@@ -130,7 +130,7 @@ class Scraper {
   }
 
   async loadCsv(path) {
-    return await csv().fromFile('path')
+    return await csv().fromFile(path)
   }
 
   async get(url, options={}) {
