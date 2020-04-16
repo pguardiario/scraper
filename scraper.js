@@ -3,6 +3,8 @@ const cheerio = require('cheerio')
 const csv = require('csvtojson')
 const fs = require('fs')
 const csvWriter = require('csv-write-stream')
+var tough = require('tough-cookie')
+var Cookie = tough.Cookie
 
 const clean = (s) => s.trim().replace(/\s+/g, ' ')
 class List {
@@ -133,6 +135,24 @@ class Scraper {
     return await csv().fromFile(path)
   }
 
+  async doHeaders(url, headers) {
+
+
+    let cookie, value
+    for(value of (headers['set-cookie'] || [])){
+      cookie = Cookie.parse(value)
+      await new Promise((resolve, reject) => this.cookiejar.setCookie(cookie, url, resolve))
+    }
+  }
+
+  async cookiesFor(url) {
+    return this.isSession ? await new Promise((resolve, reject) => {
+      this.cookiejar.getCookies(url, (err, cookies) => {
+        resolve(cookies.map(c => `${c.key}=${c.value}`))
+      })
+    }) : []
+  }
+
   async get(url, options={}) {
     let cached, response
     if(options.cache){
@@ -142,17 +162,30 @@ class Scraper {
     }
 
     if(!response){
-      response = await fb.get(url, options)
+      let cookies = await this.cookiesFor(url)
+      response = await fb.get(url, {...options, cookies})
       if(options.cache){
         await options.cache.update(url, { response })
       }
     }
+
+    await this.doHeaders(url, response.headers)
 
     if (response.headers['content-type'] && response.headers['content-type'].match(/html/)) {
       return new Page('' + response.data, url)
     } else {
       return response.data
     }
+  }
+
+  session() {
+    const ret = new Scraper()
+    ret.isSession = true
+
+
+    ret.cookiejar = new tough.CookieJar()
+
+    return ret
   }
 
   pageFrom(body, url) {
@@ -163,8 +196,9 @@ class Scraper {
 module.exports = new Scraper()
 
 // ;(async() => {
-//   let s = new Scraper()
-//   let page = await s.get('https://www.amazon.co.uk/LG-28TL510S-Smart-Ready-LED/dp/B07V1XCNVT/ref=sr_1_1?dchild=1&qid=1585364437&refinements=p_n_size_browse-bin%3A9591876031%7C9591877031%7C9591878031%2Cp_n_feature_two_browse-bin%3A2752523031&s=electronics&sr=1-1')
+//   let s = new Scraper().session()
+//   await s.get('https://www.amazon.com/Jutland-Unfinished-Personal-History-Controversy-ebook/dp/B01LXCAJJ1/')
+//   let page = await s.get('https://www.amazon.com/Jutland-Unfinished-Personal-History-Controversy-ebook/dp/B01LXCAJJ1/')
 
 //   debugger
 // })()
