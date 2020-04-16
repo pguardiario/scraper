@@ -11,6 +11,12 @@ console.log(page.search('a').hrefs)
 console.log(page.search('a').texts)
 ```
 
+# use session (keep track of cookies)
+```
+const session = scraper.session()
+session.get(url)
+```
+
 # save a csv
 ```
 scraper.save({foo: "bar"}, 'x.csv')
