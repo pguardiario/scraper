@@ -12,6 +12,7 @@
     "cheerio": "^1.0.0-rc.3",
     "csv-write-stream": "^2.0.0",
     "csvtojson": "^2.0.10",
-    "fake-browser": "github:pguardiario/fake-browser"
+    "fake-browser": "github:pguardiario/fake-browser",
+    "tough-cookie": "^4.0.0"
   }
 }
